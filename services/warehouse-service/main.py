@@ -1,70 +1,118 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import os
+import random # Para generar un ID de ubicación de ejemplo
 
-app = FastAPI(title="Warehouse Service")
+app = FastAPI(
+    title="Warehouse Service",
+    description="Servicio para gestionar reservas de espacio en el almacén como parte de la SAGA."
+)
 
-# Variables de entorno
+# --- Variables de Entorno ---
 SERVICE_NAME = os.getenv("SERVICE_NAME", "warehouse-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", "5001"))
 
-# Almacenamiento local en memoria
-reservas = []
+# --- Almacenamiento en Memoria (Base de datos simulada) ---
+# { "orderId-123": {"user": "...", "product": "...", "locationId": "..."} }
+reservations_db = {}
 
-@app.post("/reserve")
+
+@app.post("/reserve_space")
 async def reserve_space(request: Request):
-    """Reserva espacio en el almacén para un producto asociado a un usuario."""
-    data = await request.json()
-    user = data.get("user")
-    product = data.get("product")
+    """
+    Acción Principal: Reserva espacio en el almacén para una orden.
+    Es idempotente: si la reserva para esta orden ya existe, devuelve el éxito.
+    """
+    saga_data = await request.json()
+    order_id = saga_data.get("orderId")
+    user = saga_data.get("user")
+    product = saga_data.get("product")
 
-    if not user or not product:
-        return JSONResponse({"error": "Faltan campos requeridos: user, product"}, status_code=400)
+    if not all([order_id, user, product]):
+        raise HTTPException(status_code=400, detail="Faltan campos requeridos en el objeto SAGA: orderId, user, product")
 
-    reserva = {"user": user, "product": product}
-    reservas.append(reserva)
+    # --- Lógica de Idempotencia ---
+    if order_id in reservations_db:
+        print(f"Reserva para Order ID '{order_id}' ya existe. Devolviendo éxito.")
+        location_id = reservations_db[order_id]["locationId"]
+        response_content = {
+            "warehouse": {
+                "locationId": location_id,
+                "spaceReserved": True
+            }
+        }
+        return JSONResponse(content=response_content, status_code=200)
 
-    return JSONResponse({
-        "message": f"Espacio reservado en almacén para {user} - producto: {product}",
-        "service": SERVICE_NAME
-    }, status_code=200)
+    # --- Lógica de Negocio ---
+    # Simula la asignación de un espacio físico en el almacén
+    location_id = f"BAY-{random.randint(10, 99)}"
+    
+    reservations_db[order_id] = {
+        "user": user,
+        "product": product,
+        "locationId": location_id
+    }
+    print(f"Espacio reservado para Order ID '{order_id}' en la ubicación '{location_id}'.")
 
-@app.post("/cancel")
+    # --- Construcción de la Respuesta según el Contrato SAGA ---
+    response_content = {
+        "warehouse": {
+            "locationId": location_id,
+            "spaceReserved": True
+        }
+    }
+    return JSONResponse(content=response_content, status_code=201) # 201 Created es más apropiado aquí
+
+
+@app.post("/cancel_reservation")
 async def cancel_reservation(request: Request):
-    """Cancela (compensación) una reserva previamente hecha."""
-    data = await request.json()
-    user = data.get("user")
-    product = data.get("product")
+    """
+    Acción de Compensación: Libera un espacio previamente reservado.
+    """
+    saga_data = await request.json()
+    order_id = saga_data.get("orderId")
 
-    if not user or not product:
-        return JSONResponse({"error": "Faltan campos requeridos: user, product"}, status_code=400)
+    if not order_id:
+        raise HTTPException(status_code=400, detail="Falta el campo 'orderId' en el objeto SAGA")
 
-    # Buscar y eliminar la reserva
-    for r in reservas:
-        if r["user"] == user and r["product"] == product:
-            reservas.remove(r)
-            return JSONResponse({
-                "message": f"Reserva cancelada para {user} - producto: {product}",
-                "service": SERVICE_NAME
-            }, status_code=200)
+    if order_id in reservations_db:
+        removed_reservation = reservations_db.pop(order_id)
+        print(f"Reserva para Order ID '{order_id}' en '{removed_reservation['locationId']}' ha sido cancelada.")
+        
+        # Respuesta de compensación exitosa
+        response_content = {
+            "warehouse": {
+                "orderId": order_id,
+                "status": "COMPENSATED"
+            }
+        }
+        return JSONResponse(content=response_content, status_code=200)
+    else:
+        # Si la reserva no existe, la compensación se considera exitosa (ya no está).
+        print(f"No se encontró reserva para Order ID '{order_id}'. La compensación no es necesaria.")
+        response_content = {
+            "warehouse": {
+                "orderId": order_id,
+                "status": "NOT_FOUND_OR_ALREADY_COMPENSATED"
+            }
+        }
+        return JSONResponse(content=response_content, status_code=200)
 
-    return JSONResponse({
-        "message": f"No se encontró reserva para {user} - producto: {product}",
-        "service": SERVICE_NAME
-    }, status_code=404)
 
-@app.get("/reservas")
+@app.get("/reservations")
 async def list_reservations():
-    """Devuelve todas las reservas actuales."""
-    return JSONResponse({"reservas": reservas, "count": len(reservas)})
+    """Endpoint de utilidad para ver el estado actual de las reservas."""
+    return JSONResponse({
+        "current_reservations": reservations_db,
+        "count": len(reservations_db)
+    })
+
 
 @app.get("/health")
 async def health_check():
-    """Verifica el estado del servicio."""
-    return JSONResponse({
-        "service": SERVICE_NAME,
-        "status": "healthy"
-    })
+    """Verifica el estado del servicio para Kubernetes."""
+    return JSONResponse({"service": SERVICE_NAME, "status": "healthy"})
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -214,7 +214,7 @@ En caso de fallo, el JSON resultante tendria esta estructura:
 }
 ```
 
-Recuerde añadir a la lista del JSON `stepsCompleted` y `compensationsExecuted` el proceso realizado segun el endpoint.
+Las listas `stepsCompleted` y `compensationsExecuted` SOLO seran modificadas por el orquestador.
 
 ## Guía de Implementación
 
