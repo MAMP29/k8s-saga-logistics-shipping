@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service # <-- CAMBIAR
+  namespace: saga-shipping
+  labels:
+    app: customer-service # <-- CAMBIAR
+spec:
+  type: ClusterIP # Solo accesible dentro del clúster
+  selector:
+    app: customer-service # <-- CAMBIAR
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5010        # Puerto por el que el Service escucha
+    targetPort: 5010  # Puerto del contenedor al que se redirige el tráfico
