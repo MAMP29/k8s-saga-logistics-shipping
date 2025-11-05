@@ -21,13 +21,13 @@ spec:
         image: label-service:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5007
+        - containerPort: 5004
           name: http
         env:
         - name: SERVICE_NAME
           value: "label-service"
         - name: SERVICE_PORT
-          value: "5002"
+          value: "5004"
         - name: FAILURE_RATE
           value: "0.3"
         resources:
@@ -40,6 +40,6 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 5007
+            port: 5004
           initialDelaySeconds: 10
           periodSeconds: 10

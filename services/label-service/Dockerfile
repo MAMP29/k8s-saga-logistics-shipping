@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 # Variables de entorno por defecto
 ENV SERVICE_NAME="label-service"
-ENV SERVICE_PORT=5007
+ENV SERVICE_PORT=5004
 ENV FAILURE_RATE=0.4
 
 WORKDIR /app
