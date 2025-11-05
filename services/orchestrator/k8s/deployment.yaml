@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: saga-shipping
+  labels:
+    app: orchestrator
+    tier: backend
+spec:
+  replicas: 1  # Solo 1 réplica para evitar conflictos
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+      - name: orchestrator
+        image: orchestrator:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        # URLs de los microservicios (usando DNS interno de K8s)
+        - name: WAREHOUSE_URL
+          value: "http://warehouse-service.saga-shipping.svc.cluster.local:5001"
+        - name: INVENTORY_URL
+          value: "http://inventory-service.saga-shipping.svc.cluster.local:5002"
+        - name: PACKAGE_URL
+          value: "http://package-service.saga-shipping.svc.cluster.local:5003"
+        - name: LABEL_URL
+          value: "http://label-service.saga-shipping.svc.cluster.local:5004"
+        - name: CARRIER_URL
+          value: "http://carrier-service.saga-shipping.svc.cluster.local:5005"
+        - name: PICKUP_URL
+          value: "http://pickup-service.saga-shipping.svc.cluster.local:5006"
+        - name: PAYMENT_URL
+          value: "http://payment-service.saga-shipping.svc.cluster.local:5007"
+        - name: NOTIFICATION_URL
+          value: "http://notification-service.saga-shipping.svc.cluster.local:5008"
+        - name: TRACKING_URL
+          value: "http://tracking-service.saga-shipping.svc.cluster.local:5009"
+        - name: CUSTOMER_URL
+          value: "http://customer-service.saga-shipping.svc.cluster.local:5010"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10

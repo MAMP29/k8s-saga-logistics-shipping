@@ -24,9 +24,12 @@ async def reserve_space(request: Request):
     Es idempotente: si la reserva para esta orden ya existe, devuelve el éxito.
     """
     saga_data = await request.json()
+    
     order_id = saga_data.get("orderId")
-    user = saga_data.get("user")
-    product = saga_data.get("product")
+    request_data = saga_data.get("request_data", {})
+    
+    user = request_data.get("user")
+    product = request_data.get("product")
 
     if not all([order_id, user, product]):
         raise HTTPException(status_code=400, detail="Faltan campos requeridos en el objeto SAGA: orderId, user, product")
@@ -70,7 +73,12 @@ async def cancel_reservation(request: Request):
     Acción de Compensación: Libera un espacio previamente reservado.
     """
     saga_data = await request.json()
+    
     order_id = saga_data.get("orderId")
+    request_data = saga_data.get("request_data", {})
+    
+    user = request_data.get("user")
+    product = request_data.get("product")
 
     if not order_id:
         raise HTTPException(status_code=400, detail="Falta el campo 'orderId' en el objeto SAGA")

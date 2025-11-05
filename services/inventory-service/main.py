@@ -26,11 +26,15 @@ async def update_stock(request: Request):
     Acción principal: reducir stock de un producto.
     Falla aleatoriamente según FAILURE_RATE para simular errores.
     """
+
+    saga_data = await request.json()
+
     data = await request.json()
-    product = data.get("productId")
+    request_data = saga_data.get("request_data", {})
+    product = request_data.get("product")
 
     if not product:
-        raise HTTPException(status_code=400, detail="Falta 'productId' en la SAGA")
+        raise HTTPException(status_code=400, detail="Falta 'product' en la SAGA")
 
     if product not in inventory_db:
         raise HTTPException(status_code=404, detail=f"Producto {product} no encontrado")
@@ -43,7 +47,7 @@ async def update_stock(request: Request):
 
     return JSONResponse({
         "inventory": {
-            "productId": product,
+            "product": product,
             "stockUpdated": True,
             "previousStock": previous_stock,
             "currentStock": inventory_db[product]
@@ -55,11 +59,14 @@ async def revert_stock(request: Request):
     """
     Acción de compensación: restaurar stock de un producto.
     """
-    data = await request.json()
-    product = data.get("productId")
+
+    saga_data = await request.json()
+    
+    request_data = saga_data.get("request_data", {})
+    product = request_data.get("product")
 
     if not product:
-        raise HTTPException(status_code=400, detail="Falta 'productId' en la SAGA")
+        raise HTTPException(status_code=400, detail="Falta 'product' en la SAGA")
 
     if product not in inventory_db:
         inventory_db[product] = 1  # inicializa si no existía
@@ -69,7 +76,7 @@ async def revert_stock(request: Request):
 
     return JSONResponse({
         "inventory": {
-            "productId": product,
+            "product": product,
             "reverted": True,
             "previousStock": previous_stock,
             "currentStock": inventory_db[product]

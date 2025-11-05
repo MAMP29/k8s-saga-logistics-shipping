@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: hosestr7/inventory-service:latest
-        imagePullPolicy: Always
+        image: inventory-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5002
           name: http
