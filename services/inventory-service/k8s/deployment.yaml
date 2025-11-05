@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: saga-shipping
+  labels:
+    app: inventory-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+      - name: inventory-service
+        image: hosestr7/inventory-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5002
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "inventory-service"
+        - name: SERVICE_PORT
+          value: "5002"
+        - name: FAILURE_RATE
+          value: "0.3"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 10
+          periodSeconds: 10
