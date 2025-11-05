@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracking-service
+  namespace: saga-shipping
+  labels:
+    app: tracking-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tracking-service
+  template:
+    metadata:
+      labels:
+        app: tracking-service
+    spec:
+      containers:
+      - name: tracking-service
+        image: tracking-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5009
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "tracking-service"
+        - name: SERVICE_PORT
+          value: "5009"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5009
+          initialDelaySeconds: 15
+          periodSeconds: 20
