@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pickup-service
+  namespace: saga-shipping
+  labels:
+    app: pickup-service
+spec:
+  type: ClusterIP
+  selector:
+    app: pickup-service
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5006
+    targetPort: 5006
