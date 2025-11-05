@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: package-service 
+  namespace: saga-shipping
+  labels:
+    app: package-service 
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: package-service 
+  template:
+    metadata:
+      labels:
+        app: package-service 
+    spec:
+      containers:
+      - name: package-service-container 
+        image: package-service:latest 
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 5003 
+          name: http
+        env:
+        - name: SERVICE_NAME
+          value: "package-service" 
+        - name: SERVICE_PORT
+          value: "5003" 
+        # Opcional: Para servicios que simulan fallos
+        # - name: FAILURE_RATE
+        #   value: "0.3" 
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health 
+            port: 5003 
+          initialDelaySeconds: 15
+          periodSeconds: 20
