@@ -48,7 +48,7 @@ SAGA_STEPS = [
     {"name": "package", "action": "/create_package", "compensation": "/cancel_package"},
     {"name": "label", "action": "/generate_label", "compensation": "/void_label"},
     {"name": "carrier", "action": "/assign_carrier", "compensation": "/cancel_assignment"},
-    #{"name": "pickup", "action": "/schedule_pickup", "compensation": "/cancel_pickup"},
+    {"name": "pickup", "action": "/schedule_pickup", "compensation": "/cancel_pickup"},
     #{"name": "payment", "action": "/process_payment", "compensation": "/refund_payment"},
 ]
 

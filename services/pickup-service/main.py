@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import os
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = FastAPI(
     title="Pickup Service",
@@ -18,18 +18,13 @@ pickups_db  = {}
 
 
 @app.post("/schedule_pickup")
-async def reserve_space(request: Request):
+async def schedule_pickup(request: Request):
 
     saga_data = await request.json()
     
     order_id = saga_data.get("orderId")
-    request_data = saga_data.get("request_data", {})
-
-    scheduled_at = request_data.get("scheduledAt")
-
-
-    if not all([order_id, scheduled_at]):
-        raise HTTPException(status_code=400, detail="Faltan campos requeridos: orderId o scheduledAt")
+    if not order_id:
+        raise HTTPException(status_code=400, detail="Falta campo requerido: orderId")
 
 
     if order_id in pickups_db :
@@ -38,18 +33,20 @@ async def reserve_space(request: Request):
         return JSONResponse(content={"pickup": existing_pickup}, status_code=200)
 
     pickup_id = f"PU-{random.randint(100, 999)}"
+    pickup_time = datetime.now() + timedelta(days=1)
+    scheduled_at_iso = pickup_time.isoformat()
     
     pickups_db[order_id] = {
         "pickupId": pickup_id,
-        "scheduledAt": scheduled_at
+        "scheduledAt": scheduled_at_iso
     }
-    print(f"Pickup programado para Order ID '{order_id}' con ID '{pickup_id}' a las {scheduled_at}.")
+    print(f"Pickup programado para Order ID '{order_id}' con ID '{pickup_id}' a las {scheduled_at_iso}.")
 
 
     response_content = {
             "pickup": {
                 "pickupId": pickup_id,
-                "scheduledAt": scheduled_at
+                "scheduledAt": scheduled_at_iso
             }
     }
 
