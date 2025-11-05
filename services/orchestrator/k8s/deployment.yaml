@@ -33,8 +33,8 @@ spec:
           value: "http://package-service.saga-shipping.svc.cluster.local:5003"
         - name: LABEL_URL
           value: "http://label-service.saga-shipping.svc.cluster.local:5004"
-        - name: CARRIER_URL
-          value: "http://carrier-service.saga-shipping.svc.cluster.local:5005"
+        - name: TRANSPORT_URL
+          value: "http://transport-service.saga-shipping.svc.cluster.local:5005"
         - name: PICKUP_URL
           value: "http://pickup-service.saga-shipping.svc.cluster.local:5006"
         - name: PAYMENT_URL

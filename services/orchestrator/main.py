@@ -32,7 +32,7 @@ URLS = {
     "inventory": os.getenv("INVENTORY_URL", "http://localhost:5002"),
     "package": os.getenv("PACKAGE_URL", "http://localhost:5003"),
     "label": os.getenv("LABEL_URL", "http://localhost:5004"),
-    "carrier": os.getenv("CARRIER_URL", "http://localhost:5005"),
+    "carrier": os.getenv("TRANSPORT_URL", "http://localhost:5005"),
     "pickup": os.getenv("PICKUP_URL", "http://localhost:5006"),
     "payment": os.getenv("PAYMENT_URL", "http://localhost:5007"),
     "notification": os.getenv("NOTIFICATION_URL", "http://localhost:5008"),
@@ -45,9 +45,9 @@ URLS = {
 SAGA_STEPS = [
     {"name": "warehouse", "action": "/reserve_space", "compensation": "/cancel_reservation"},
     {"name": "inventory", "action": "/update_stock", "compensation": "/revert_stock"},
-    #{"name": "package", "action": "/create_package", "compensation": "/cancel_package"},
+    {"name": "package", "action": "/create_package", "compensation": "/cancel_package"},
     #{"name": "label", "action": "/generate_label", "compensation": "/void_label"},
-    #{"name": "carrier", "action": "/assign_carrier", "compensation": "/cancel_assignment"},
+    {"name": "carrier", "action": "/assign_carrier", "compensation": "/cancel_assignment"},
     #{"name": "pickup", "action": "/schedule_pickup", "compensation": "/cancel_pickup"},
     #{"name": "payment", "action": "/process_payment", "compensation": "/refund_payment"},
 ]
