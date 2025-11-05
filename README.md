@@ -58,14 +58,15 @@ Este objeto JSON actúa como un "pasaporte" que viaja a través del flujo. Conti
 
 ```json
 {
-  "orderId": "ORD-1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
-  "status": "PENDING",
-  "user": "cliente-123",
-  "product": "laptop-xyz",
-  "quantity": 1,
-  "shippingAddress": "Calle Falsa 123",
-  "paymentDetails": "visa-ending-9876",
-  
+  "orderId": "ORD-b702a0c3-9785-4a6a-8171-1002309b9b3e",
+  "status": "FAILED_AND_COMPENSATED",
+  "request_data": {
+    "user": "cliente-demo-123",
+    "product": "product-001",
+    "quantity": 1,
+    "shippingAddress": "Calle Falsa 123, Demo",
+    "paymentDetails": "visa-demo-1234"
+  },
   "generatedData": {
     "warehouse": null,
     "inventory": null,
@@ -76,9 +77,8 @@ Este objeto JSON actúa como un "pasaporte" que viaja a través del flujo. Conti
     "payment": null,
     "notification": null,
     "tracking": null,
-    "customer": null
+    "customer": null,
   },
-  
   "stepsCompleted": [],
   "compensationsExecuted": []
 }
