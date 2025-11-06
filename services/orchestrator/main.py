@@ -26,7 +26,6 @@ app.add_middleware(
 )
 
 # --- Lectura de URLs de Microservicios desde Variables de Entorno ---
-# Se usan los nombres DNS internos de Kubernetes definidos en el deployment.
 URLS = {
     "warehouse": os.getenv("WAREHOUSE_URL", "http://localhost:5001"),
     "inventory": os.getenv("INVENTORY_URL", "http://localhost:5002"),
@@ -41,7 +40,6 @@ URLS = {
 }
 
 # --- Definición de los Pasos de la SAGA ---
-# Aquí se define el orden, la acción y la compensación de cada paso.
 SAGA_STEPS = [
     {"name": "warehouse", "action": "/reserve_space", "compensation": "/cancel_reservation"},
     {"name": "inventory", "action": "/update_stock", "compensation": "/revert_stock"},
@@ -90,7 +88,7 @@ async def execute_saga(order_id: str):
     saga.status = "PROCESSING"
 
     try:
-        # --- 1. Flujo Principal (Acciones) ---
+        # --- Flujo Principal (Acciones) ---
         for step in SAGA_STEPS:
             step_name = step["name"]
             url = URLS[step_name] + step["action"]
@@ -107,13 +105,11 @@ async def execute_saga(order_id: str):
                 saga.stepsCompleted.append(step_name)
                 sagas_db[order_id] = saga # Guardar progreso
 
-        # --- 2. Si todo fue exitoso, llamar a los servicios finales ---
         saga.status = "COMPLETED"
         print(f"[SAGA {order_id}] ==> Flow completed successfully. Executing final steps.")
         await execute_final_steps(saga, success=True)
 
     except httpx.HTTPStatusError as e:
-        # --- 3. Si algo falla, iniciar compensación ---
         failed_step = step["name"]
         print(f"[SAGA {order_id}] ==> ❌ FAILED at step: {failed_step}. Reason: {e.response.text}")
         saga.status = "CANCELLING"
@@ -151,9 +147,8 @@ async def execute_final_steps(saga: SagaState, success: bool):
     """Llama a los servicios de notificación, seguimiento y cliente."""
     context = "confirmation" if success else "cancellation"
     
-    # Lógica simplificada, en un caso real los endpoints podrían variar
     await call_final_service("notification", f"/send_confirmation", saga)
-    await call_final_service("tracking", f"/update_status", saga) # Este servicio leería el estado de la saga
+    await call_final_service("tracking", f"/update_status", saga)
     await call_final_service("customer", f"/update_history", saga)
 
 async def call_final_service(service_name: str, endpoint: str, saga: SagaState):
